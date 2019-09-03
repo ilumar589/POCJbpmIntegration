@@ -1,8 +1,8 @@
 package com.poc.jbpmintegration;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -10,15 +10,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final DataSource dataSource;
 
 	@Value("${spring.queries.users-query}")
@@ -48,19 +47,14 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 			http.addFilterBefore(new CorsFilter(), ChannelProcessingFilter.class);
 			http
 				.authorizeRequests()
-				.antMatchers("/").permitAll()
-				.antMatchers("/api/login").permitAll()
-				.antMatchers("/api/registration").permitAll()
-				.antMatchers("/api/admin/**").hasAuthority("ADMIN").anyRequest()
-				.authenticated().and().csrf().disable().formLogin()
-				.loginPage("/login").failureUrl("/login?error=true")
-				.defaultSuccessUrl("/admin/home")
-				.usernameParameter("email")
-				.passwordParameter("password")
-				.and().logout()
-				.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-				.logoutSuccessUrl("/").and().exceptionHandling()
-				.accessDeniedPage("/access-denied");
+				.antMatchers("/**").permitAll()
+				.antMatchers(HttpMethod.OPTIONS,"/**").permitAll()
+				.antMatchers(HttpMethod.GET, "/index*", "/static/**", "/*.js", "/*.json", "/*.ico").permitAll()
+				.and()
+				.formLogin().loginPage("/index.html")
+				.loginProcessingUrl("/perform_login")
+				.defaultSuccessUrl("/homepage.html",true)
+				.failureUrl("/index.html?error=true");
 	}
 
 	@Override
